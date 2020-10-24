@@ -1,6 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 const ProductsPage = () => {
+  const [error, setError] = useState('');
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const response = await fetch(process.env.REACT_APP_BACKEND_API + '/api/products', {
+        method: 'GET',
+        headers: {
+          'Authorization': window.localStorage.getItem('token'),
+        },
+      });
+      const body = await response.json();
+      if (!response.ok) {
+        setError(body.message)
+      } else {
+        setProducts(body.data);
+      }
+    }
+
+    fetchData()
+  }, [])
+
   return <>
     <section className="py-10">
       <div className="container mx-auto max-w-screen-lg">
@@ -16,7 +38,12 @@ const ProductsPage = () => {
             </span>
           </div>
         </div>
-        <div className="flex flex-col mb-8">
+        { error ? <>
+            <span className="inline-block w-full px-3 py-2 rounded bg-red-500 text-white mb-2">
+              {error}
+            </span>
+            <div className="border-4 border-dashed border-gray-200 rounded-lg h-64 mb-4"></div>
+          </> : <div className="flex flex-col mb-8">
           <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
               <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
@@ -36,35 +63,38 @@ const ProductsPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                  <tr>
-                    <td className="px-6 py-4 whitespace-no-wrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <img className="h-10 w-10 rounded-full" src="https://images.unsplash.com/photo-1527443195645-1133f7f28990?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1350&q=80" alt="" />
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm leading-5 font-medium text-gray-900">
-                            iMac 2020
+                    { products.length > 0 ? products.map((product, index) => <tr key={index}>
+                      <td className="px-6 py-4 whitespace-no-wrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10">
+                            <img className="h-10 w-10 rounded-full" src={product.image} alt="" />
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm leading-5 font-medium text-gray-900">
+                              {product.name}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-no-wrap">
-                      <div className="text-sm leading-5 text-gray-900">Regional Paradigm Technician</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-no-wrap">
-                      $4,400.00
-                    </td>
-                    <td className="px-6 py-4 whitespace-no-wrap text-right text-sm leading-5 font-medium">
-                      <a href="#" className="text-indigo-600 hover:text-indigo-900">Edit</a>
-                    </td>
-                  </tr>
+                      </td>
+                      <td className="px-6 py-4 whitespace-no-wrap">
+                        <div className="text-sm leading-5 text-gray-900">{product.description}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-no-wrap">
+                        {new Intl.NumberFormat('es-MX', {
+                          style: 'currency',
+                          currency: 'MXN'
+                        }).format(product.price)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-no-wrap text-right text-sm leading-5 font-medium">
+                        <a href="#" className="text-indigo-600 hover:text-indigo-900">Edit</a>
+                      </td>
+                    </tr>) : null }
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
-        </div>
+        </div> }
       </div>
     </section>
   </>;
